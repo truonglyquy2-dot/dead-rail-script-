@@ -8,7 +8,7 @@ local UserInputService = game:GetService("UserInputService")
 local Window = Rayfield:CreateWindow({
    Name = "Evade | Blue Pro Hub",
    LoadingTitle = "Đang khởi tạo Blue Hub...",
-   LoadingSubtitle = "Hỗ trợ Key System, Auto Farm & Blue Theme",
+   LoadingSubtitle = "Hỗ trợ Key System, Auto Farm & Dash Speed",
    ConfigurationSaving = { 
       Enabled = true, 
       FolderName = "EvadeBlueHub", 
@@ -151,21 +151,23 @@ MovementTab:CreateSlider({
    end,
 })
 
-MovementTab:CreateParagraph({Title = "Hướng dẫn phím tắt Dash", Content = "Nhấn phím [Ctrl] HOẶC phím [C] trên bàn phím để kích hoạt gia tốc Dash ngay lập tức."})
+MovementTab:CreateParagraph({Title = "Hướng dẫn phím tắt Dash", Content = "Nhấn phím [Ctrl] HOẶC phím [C] để tăng tốc độ di chuyển sát mặt đất lên mức đã chọn."})
 
--- Lắng nghe sự kiện: chỉ cần bấm phím Ctrl HOẶC phím C là kích hoạt
+-- Lắng nghe sự kiện: chỉ cần bấm phím Ctrl HOẶC phím C là chỉnh WalkSpeed lên mức DashSpeed
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
    if gameProcessed then return end
    
    if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl or input.KeyCode == Enum.KeyCode.C then
       pcall(function()
          local char = LocalPlayer.Character
-         if char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart
-            hrp.AssemblyLinearVelocity = hrp.CFrame.LookVector * _G.DashSpeed + Vector3.new(0, 50, 0)
+         if char and char:FindFirstChild("Humanoid") then
+            local humanoid = char.Humanoid
+            -- Tăng trực tiếp tốc độ di chuyển sát mặt đất
+            humanoid.WalkSpeed = _G.DashSpeed
+            
             Rayfield:Notify({
                Title = "Blue Dash Activated!",
-               Content = "Đã kích hoạt Dash Speed: " .. tostring(_G.DashSpeed),
+               Content = "Đã chỉnh tốc độ chạy lên: " .. tostring(_G.DashSpeed),
                Duration = 1.2,
                Image = 4483362458,
             })
