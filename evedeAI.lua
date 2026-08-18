@@ -151,9 +151,12 @@ MovementTab:CreateSlider({
    end,
 })
 
-MovementTab:CreateParagraph({Title = "Hướng dẫn phím tắt Dash", Content = "Nhấn phím [Ctrl] HOẶC phím [C] để tăng tốc độ di chuyển sát mặt đất lên mức đã chọn."})
+MovementTab:CreateParagraph({
+   Title = "Hướng dẫn phím tắt Dash", 
+   Content = "Nhấn phím [Ctrl] HOẶC phím [C] để tăng tốc độ di chuyển sát mặt đất lên mức đã chọn (Không bị bay lên trời)."
+})
 
--- Lắng nghe sự kiện: chỉ cần bấm phím Ctrl HOẶC phím C là chỉnh WalkSpeed lên mức DashSpeed
+-- Lắng nghe sự kiện phím bấm: Chỉ tăng WalkSpeed sát mặt đất, không tác động lực bay lên không trung
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
    if gameProcessed then return end
    
@@ -162,7 +165,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
          local char = LocalPlayer.Character
          if char and char:FindFirstChild("Humanoid") then
             local humanoid = char.Humanoid
-            -- Tăng trực tiếp tốc độ di chuyển sát mặt đất
             humanoid.WalkSpeed = _G.DashSpeed
             
             Rayfield:Notify({
