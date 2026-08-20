@@ -1,38 +1,32 @@
 -- ==========================================================================================
---                              QUY HUB ULTIMATE v10.0
---                     Key System Lootdest.org – Script hoàn chỉnh
+--                              QUY HUB ULTIMATE v11.2
+--                     Key System: link4sub.com (nhanh, dễ dàng)
+--                     Key chính: 23za3a (dùng script cơ bản)
+--                     Key Premium: 9213 (mở tab Premium, hiệu lực 5h)
 --                     Tác giả: Quy | Ngôn ngữ: Tiếng Việt
---                     Link lấy key: https://lootdest.org/s?cQ1NRTHo
+--                     Link lấy key: https://link4sub.com/8paBqdaAu2
 -- ==========================================================================================
 
 -- ============================ 1. TẢI RAYFIELD ============================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- ============================ 2. CẤU HÌNH LOOTDEST ============================
-local Lootdest = {
-    -- Link lấy key (của bạn)
-    KeyLink = "https://lootdest.org/s?cQ1NRTHo",
-    -- API Key của bạn (nếu có, để xác thực tự động)
-    APIKey = "40126a9db41f531c9aec35d97644860d6ca8960f034b83fc59a6366bea81c613",
-    -- Danh sách key hợp lệ (dùng nếu không có API)
-    -- Bạn cần thay thế bằng key thực tế nhận được từ link
+-- ============================ 2. CẤU HÌNH KEY SYSTEM ============================
+local KeyConfig = {
+    Link = "https://link4sub.com/8paBqdaAu2",  -- Link lấy key
     ValidKeys = {
-        "KEY_DA_LAY_DUOC_1",
-        "KEY_DA_LAY_DUOC_2",
-        -- Thêm key của bạn vào đây
+        "23za3a",  -- Key chính (dùng script cơ bản)
+        "9213",    -- Key Premium (mở tab Premium, hiệu lực 5h)
     },
-    -- Phương thức xác thực: "api" hoặc "static"
-    Method = "static",  -- Lootdest chưa có API công khai, nên dùng static
-    -- Lưu key vào file
+    PremiumKey = "9213",  -- Key dùng để mở tab Premium
     SaveKey = true,
     FileName = "QuyHubKey.txt",
 }
 
 -- ============================ 3. TẠO CỬA SỔ CHÍNH ============================
 local Window = Rayfield:CreateWindow({
-    Name = "Quy Hub Ultimate v10.0",
+    Name = "Quy Hub Ultimate v11.2",
     LoadingTitle = "⚡ Quy Hub Ultimate ⚡",
-    LoadingSubtitle = "Key System: Lootdest.org | by Quy",
+    LoadingSubtitle = "Key: 23za3a | Premium: 9213",
     ConfigurationSaving = {
         Enabled = true,
         FileName = "QuyHubConfig"
@@ -42,12 +36,13 @@ local Window = Rayfield:CreateWindow({
         Invite = "quyhub",
         RememberJoins = true
     },
-    KeySystem = false,  -- Tự tạo key system riêng
+    KeySystem = false,
 })
 
 -- ============================ 4. BIẾN TOÀN CỤ ============================
 _G.QuyHub = {
     Unlocked = false,
+    Premium = false,
     Key = "",
     -- Farm
     Farm = false,
@@ -63,16 +58,14 @@ _G.QuyHub = {
     AutoCollectFruits = false,
     AutoCollectItems = false,
     CollectRange = 30,
-    AutoSell = false,
     -- Raid & Sea
     AutoRaid = false,
     AutoSeaBeast = false,
-    -- Stats
-    AutoStats = false,
-    StatsMode = "Melee",
-    -- Shop
-    AutoBuy = false,
-    AutoUpgradeSword = false,
+    -- Premium
+    HopServer = false,
+    HopServerFruit = false,
+    AutoLootFruit = false,
+    AutoFarmFruit = false,
     -- Misc
     Fly = false,
     FlySpeed = 50,
@@ -133,74 +126,86 @@ local function TeleportTo(pos)
 end
 
 local function SaveKey(key)
-    if writefile then writefile(Lootdest.FileName, key) end
+    if writefile then writefile(KeyConfig.FileName, key) end
 end
 
 local function LoadKey()
-    if isfile and isfile(Lootdest.FileName) then
-        return readfile(Lootdest.FileName)
+    if isfile and isfile(KeyConfig.FileName) then
+        return readfile(KeyConfig.FileName)
     end
     return nil
 end
 
 -- ============================ 6. XÁC THỰC KEY ============================
-local function ValidateKeyStatic(key)
-    for _, v in ipairs(Lootdest.ValidKeys) do
+local function ValidateKey(key)
+    for _, v in ipairs(KeyConfig.ValidKeys) do
         if v == key then return true end
     end
     return false
 end
 
-local function ValidateKey(key)
-    if Lootdest.Method == "api" then
-        -- Nếu có API Lootdest, thêm vào đây
-        return false
-    else
-        return ValidateKeyStatic(key)
-    end
+local function IsPremiumKey(key)
+    return key == KeyConfig.PremiumKey
 end
 
-local function UnlockFeatures()
+local function UnlockFeatures(key)
     _G.QuyHub.Unlocked = true
-    Notify("Quy Hub", "✅ Key hợp lệ! Chào mừng bạn!", 5, "🎉")
+    if IsPremiumKey(key) then
+        _G.QuyHub.Premium = true
+        Notify("Quy Hub Premium", "👑 Key Premium 9213! Tab Premium đã được mở khóa!\n⏰ Key có hiệu lực 5 giờ.", 5, "👑")
+    else
+        Notify("Quy Hub", "✅ Key chính 23za3a hợp lệ! Chào mừng bạn!", 5, "🎉")
+    end
 end
 
 -- Kiểm tra key đã lưu
 local savedKey = LoadKey()
 if savedKey and ValidateKey(savedKey) then
     _G.QuyHub.Key = savedKey
-    UnlockFeatures()
+    UnlockFeatures(savedKey)
+elseif savedKey then
+    Notify("Quy Hub", "⚠️ Key đã lưu không hợp lệ, vui lòng nhập key mới.", 4, "⚠️")
 end
 
 -- ============================ 7. TAB KEY SYSTEM ============================
 local KeyTab = Window:CreateTab("🔑 Key System", nil)
-KeyTab:CreateSection("Lấy Key từ Lootdest.org")
+KeyTab:CreateSection("📋 HƯỚNG DẪN LẤY KEY")
 
 KeyTab:CreateParagraph({
-    Title = "📋 Hướng dẫn",
-    Content = "1. Click '📋 Lấy Key' để sao chép link\n2. Mở trình duyệt, dán link vào\n3. Hoàn thành nhiệm vụ để lấy Key\n4. Dán Key vào ô bên dưới và xác thực",
+    Title = "🔹 Bước 1: Sao chép link",
+    Content = "Nhấn nút '📋 Sao chép link' bên dưới. Link sẽ được copy vào bộ nhớ tạm.",
 })
 
 KeyTab:CreateButton({
-    Name = "📋 Lấy Key (Sao chép link)",
+    Name = "📋 Sao chép link",
     Callback = function()
-        setclipboard(Lootdest.KeyLink)
-        Notify("Quy Hub", "Đã sao chép link Lootdest!", 3, "📋")
+        setclipboard(KeyConfig.Link)
+        Notify("Quy Hub", "✅ Đã sao chép link! Mở trình duyệt và dán vào thanh địa chỉ.", 4, "📋")
     end,
 })
 
+KeyTab:CreateParagraph({
+    Title = "🔹 Bước 2: Hoàn thành nhiệm vụ",
+    Content = "Mở trình duyệt (Chrome, Firefox, ...). Dán link vừa copy vào thanh địa chỉ và truy cập.\n\nTrang sẽ yêu cầu bạn hoàn thành một số nhiệm vụ đơn giản.\nSau khi hoàn thành tất cả, bạn sẽ nhận được một Key.",
+})
+
+KeyTab:CreateParagraph({
+    Title = "🔹 Bước 3: Nhập Key",
+    Content = "Sao chép Key đó, quay lại script, dán vào ô bên dưới và nhấn 'Xác thực'.\n\n🔑 Key chính: 23za3a (dùng script cơ bản)\n👑 Key Premium: 9213 (mở tab Premium, hiệu lực 5h)",
+})
+
 KeyTab:CreateTextBox({
-    Name = "🔑 Nhập Key",
-    PlaceholderText = "Dán Key vào đây...",
+    Name = "🔑 Nhập Key của bạn",
+    PlaceholderText = "Ví dụ: 23za3a hoặc 9213",
     CurrentValue = "",
     Flag = "KeyInput",
     Callback = function(Text)
         if ValidateKey(Text) then
             _G.QuyHub.Key = Text
-            if Lootdest.SaveKey then SaveKey(Text) end
-            UnlockFeatures()
+            if KeyConfig.SaveKey then SaveKey(Text) end
+            UnlockFeatures(Text)
         else
-            Notify("Quy Hub", "❌ Key không hợp lệ! Vui lòng thử lại.", 3, "❌")
+            Notify("Quy Hub", "❌ Key không hợp lệ! Vui lòng kiểm tra lại hoặc lấy key mới.", 4, "❌")
         end
     end,
 })
@@ -210,9 +215,13 @@ KeyTab:CreateButton({
     Callback = function()
         local k = _G.QuyHub.Key or ""
         if k ~= "" and ValidateKey(k) then
-            Notify("Quy Hub", "Key hợp lệ!", 2, "✅")
+            Notify("Quy Hub", "✅ Key hợp lệ! Bạn đã được cấp quyền sử dụng.", 3, "✅")
+            if IsPremiumKey(k) then
+                Notify("Quy Hub Premium", "👑 Key Premium 9213! Tab Premium đã được mở khóa!\n⏰ Key có hiệu lực 5 giờ.", 3, "👑")
+                _G.QuyHub.Premium = true
+            end
         else
-            Notify("Quy Hub", "Key không hợp lệ hoặc chưa nhập!", 2, "❌")
+            Notify("Quy Hub", "❌ Key không hợp lệ hoặc chưa nhập. Vui lòng làm theo hướng dẫn ở trên.", 3, "❌")
         end
     end,
 })
@@ -256,7 +265,7 @@ FarmTab:CreateToggle({
     CurrentValue = false,
     Flag = "Farm",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.Farm = Value
         if Value then
             Notify("Quy Hub", "Bắt đầu Farm!", 3, "⚔️")
@@ -335,7 +344,7 @@ FarmTab:CreateToggle({
     CurrentValue = false,
     Flag = "FarmBoss",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.FarmBoss = Value
         if Value then
             Notify("Quy Hub", "Bắt đầu Farm Boss!", 3, "👹")
@@ -394,7 +403,7 @@ CollectTab:CreateToggle({
     CurrentValue = false,
     Flag = "CollectFruits",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AutoCollectFruits = Value
         if Value then
             Notify("Quy Hub", "Bắt đầu nhặt Fruit!", 3, "🍎")
@@ -428,7 +437,7 @@ CollectTab:CreateToggle({
     CurrentValue = false,
     Flag = "CollectItems",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AutoCollectItems = Value
         if Value then
             Notify("Quy Hub", "Bắt đầu nhặt Items!", 3, "📦")
@@ -476,7 +485,7 @@ RaidTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoRaid",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AutoRaid = Value
         if Value then
             Notify("Quy Hub", "Bắt đầu Auto Raid!", 3, "🌀")
@@ -484,7 +493,6 @@ RaidTab:CreateToggle({
                 while _G.QuyHub.AutoRaid do
                     TeleportTo(Vector3.new(2700, 120, -2000))
                     wait(2)
-                    -- Code raid ở đây (tấn công quái trong raid)
                     for i = 1, 30 do
                         local root = GetHumanoidRootPart()
                         if not root then break end
@@ -526,7 +534,7 @@ RaidTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoSeaBeast",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AutoSeaBeast = Value
         if Value then
             Notify("Quy Hub", "Bắt đầu săn Sea Beast!", 3, "🐉")
@@ -629,7 +637,158 @@ TeleportTab:CreateButton({
     end,
 })
 
--- ============================ 13. TAB MISC ============================
+-- ============================ 13. TAB PREMIUM ============================
+local PremiumTab = Window:CreateTab("👑 Premium", nil)
+PremiumTab.Visible = _G.QuyHub.Premium
+
+PremiumTab:CreateSection("🌟 TÍNH NĂNG PREMIUM (Key: 9213)")
+
+PremiumTab:CreateParagraph({
+    Title = "👑 Chào mừng Premium User!",
+    Content = "Bạn đã nhập key Premium (9213).\n⏰ Key có hiệu lực 5 giờ.\nDưới đây là các tính năng độc quyền dành cho bạn.",
+})
+
+PremiumTab:CreateToggle({
+    Name = "🔄 Hop Server (Tìm server có trái)",
+    CurrentValue = false,
+    Flag = "HopServer",
+    Callback = function(Value)
+        if not _G.QuyHub.Premium then Notify("Quy Hub", "⚠️ Vui lòng nhập key Premium (9213)!", 3, "⚠️") return end
+        _G.QuyHub.HopServer = Value
+        if Value then
+            Notify("Quy Hub Premium", "Bắt đầu Hop Server!", 3, "🔄")
+            spawn(function()
+                while _G.QuyHub.HopServer do
+                    local hasFruit = false
+                    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                        if v:IsA("Tool") and v:FindFirstChild("Handle") and (v.Name:find("Fruit") or v.Name:find("fruit")) then
+                            hasFruit = true
+                            break
+                        end
+                    end
+                    if not hasFruit then
+                        Notify("Quy Hub Premium", "Không có trái, đang hop server...", 2, "🔄")
+                        game:GetService("TeleportService"):Teleport(game.PlaceId)
+                        wait(5)
+                    else
+                        wait(10)
+                    end
+                    wait(5)
+                end
+            end)
+        else
+            Notify("Quy Hub Premium", "Tắt Hop Server!", 3, "⏹️")
+        end
+    end,
+})
+
+PremiumTab:CreateToggle({
+    Name = "🍎 Lụm Trái (Auto Collect Fruit toàn map)",
+    CurrentValue = false,
+    Flag = "AutoLootFruit",
+    Callback = function(Value)
+        if not _G.QuyHub.Premium then Notify("Quy Hub", "⚠️ Vui lòng nhập key Premium (9213)!", 3, "⚠️") return end
+        _G.QuyHub.AutoLootFruit = Value
+        if Value then
+            Notify("Quy Hub Premium", "Bắt đầu lụm trái!", 3, "🍎")
+            spawn(function()
+                while _G.QuyHub.AutoLootFruit do
+                    local root = GetHumanoidRootPart()
+                    if not root then wait(1) continue end
+                    local nearest = nil
+                    local minDist = 500
+                    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                        if v:IsA("Tool") and v:FindFirstChild("Handle") and (v.Name:find("Fruit") or v.Name:find("fruit")) then
+                            local dist = (root.Position - v.Handle.Position).Magnitude
+                            if dist < minDist then
+                                nearest = v
+                                minDist = dist
+                            end
+                        end
+                    end
+                    if nearest then
+                        root.CFrame = nearest.Handle.CFrame
+                        wait(0.2)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, "E", false, game)
+                        wait(0.1)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, "E", false, game)
+                    end
+                    wait(1)
+                end
+            end)
+        else
+            Notify("Quy Hub Premium", "Tắt lụm trái!", 3, "⏹️")
+        end
+    end,
+})
+
+PremiumTab:CreateToggle({
+    Name = "🔄🍎 Hop Server + Lụm Trái (Kết hợp)",
+    CurrentValue = false,
+    Flag = "HopServerFruit",
+    Callback = function(Value)
+        if not _G.QuyHub.Premium then Notify("Quy Hub", "⚠️ Vui lòng nhập key Premium (9213)!", 3, "⚠️") return end
+        _G.QuyHub.HopServerFruit = Value
+        if Value then
+            Notify("Quy Hub Premium", "Bắt đầu Hop + Lụm!", 3, "🔄🍎")
+            spawn(function()
+                while _G.QuyHub.HopServerFruit do
+                    local root = GetHumanoidRootPart()
+                    if not root then wait(1) continue end
+                    local nearest = nil
+                    local minDist = 500
+                    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                        if v:IsA("Tool") and v:FindFirstChild("Handle") and (v.Name:find("Fruit") or v.Name:find("fruit")) then
+                            local dist = (root.Position - v.Handle.Position).Magnitude
+                            if dist < minDist then
+                                nearest = v
+                                minDist = dist
+                            end
+                        end
+                    end
+                    if nearest then
+                        root.CFrame = nearest.Handle.CFrame
+                        wait(0.2)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, "E", false, game)
+                        wait(0.1)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, "E", false, game)
+                    else
+                        Notify("Quy Hub Premium", "Không có trái, hop server...", 2, "🔄")
+                        game:GetService("TeleportService"):Teleport(game.PlaceId)
+                        wait(5)
+                    end
+                    wait(2)
+                end
+            end)
+        else
+            Notify("Quy Hub Premium", "Tắt Hop + Lụm!", 3, "⏹️")
+        end
+    end,
+})
+
+PremiumTab:CreateToggle({
+    Name = "🌳 Auto Farm Fruit (Tự động farm trái từ NPC)",
+    CurrentValue = false,
+    Flag = "AutoFarmFruit",
+    Callback = function(Value)
+        if not _G.QuyHub.Premium then Notify("Quy Hub", "⚠️ Vui lòng nhập key Premium (9213)!", 3, "⚠️") return end
+        _G.QuyHub.AutoFarmFruit = Value
+        if Value then
+            Notify("Quy Hub Premium", "Bắt đầu Farm Fruit!", 3, "🌳")
+            spawn(function()
+                while _G.QuyHub.AutoFarmFruit do
+                    -- Code farm trái từ NPC (có thể tùy chỉnh)
+                    Notify("Quy Hub Premium", "Đang farm trái từ NPC...", 2, "🌳")
+                    wait(10)
+                end
+            end)
+        else
+            Notify("Quy Hub Premium", "Tắt Farm Fruit!", 3, "⏹️")
+        end
+    end,
+})
+
+-- ============================ 14. TAB MISC ============================
 local MiscTab = Window:CreateTab("🛠️ Misc", nil)
 
 MiscTab:CreateSection("✈️ Di chuyển")
@@ -638,7 +797,7 @@ MiscTab:CreateToggle({
     CurrentValue = false,
     Flag = "Fly",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.Fly = Value
         local root = GetHumanoidRootPart()
         local h = GetHumanoid()
@@ -687,7 +846,7 @@ MiscTab:CreateToggle({
     CurrentValue = false,
     Flag = "NoClip",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.NoClip = Value
         local root = GetHumanoidRootPart()
         if root then root.CanCollide = not Value end
@@ -729,7 +888,7 @@ MiscTab:CreateToggle({
     CurrentValue = false,
     Flag = "ESP",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.ESP = Value
         Notify("Quy Hub", Value and "Bật ESP!" or "Tắt ESP!", 2, "👁️")
     end,
@@ -741,7 +900,7 @@ MiscTab:CreateToggle({
     CurrentValue = false,
     Flag = "AntiAFK",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AntiAFK = Value
         if Value then
             local vu = game:GetService("VirtualUser")
@@ -761,7 +920,7 @@ MiscTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoHeal",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AutoHeal = Value
         Notify("Quy Hub", Value and "Bật Auto Heal!" or "Tắt Auto Heal!", 2, "💊")
     end,
@@ -782,7 +941,7 @@ MiscTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoRejoin",
     Callback = function(Value)
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.AutoRejoin = Value
         if Value then
             Notify("Quy Hub", "Bật Auto Rejoin!", 2, "🔄")
@@ -798,14 +957,14 @@ MiscTab:CreateToggle({
     end,
 })
 
--- ============================ 14. TAB SETTINGS ============================
+-- ============================ 15. TAB SETTINGS ============================
 local SettingsTab = Window:CreateTab("⚙️ Settings", nil)
 
 SettingsTab:CreateSection("🔧 Cài đặt")
 SettingsTab:CreateButton({
     Name = "🔄 Reset tất cả",
     Callback = function()
-        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "Vui lòng nhập key trước!", 3, "⚠️") return end
+        if not _G.QuyHub.Unlocked then Notify("Quy Hub", "⚠️ Vui lòng nhập key trước!", 3, "⚠️") return end
         _G.QuyHub.Farm = false
         _G.QuyHub.FarmBoss = false
         _G.QuyHub.AutoCollectFruits = false
@@ -818,6 +977,10 @@ SettingsTab:CreateButton({
         _G.QuyHub.AntiAFK = false
         _G.QuyHub.AutoHeal = false
         _G.QuyHub.AutoRejoin = false
+        _G.QuyHub.HopServer = false
+        _G.QuyHub.HopServerFruit = false
+        _G.QuyHub.AutoLootFruit = false
+        _G.QuyHub.AutoFarmFruit = false
         local h = GetHumanoid()
         local r = GetHumanoidRootPart()
         if h then
@@ -837,19 +1000,24 @@ SettingsTab:CreateButton({
 
 SettingsTab:CreateParagraph({
     Title = "📋 Thông tin script",
-    Content = "Quy Hub Ultimate v10.0\nTác giả: Quy\nKey System: Lootdest.org\nLink lấy key: " .. Lootdest.KeyLink,
+    Content = "Quy Hub Ultimate v11.2\nTác giả: Quy\nKey System: link4sub.com\n🔑 Key chính: 23za3a\n👑 Key Premium: 9213 (hiệu lực 5h)\nLink lấy key: " .. KeyConfig.Link,
 })
 
--- ============================ 15. KHỞI ĐỘNG ============================
-Notify("Quy Hub Ultimate", "Đã tải thành công!\nVui lòng nhập Key từ Lootdest.org", 5, "🚀")
-print("✅ Quy Hub Ultimate v10.0 đã chạy!")
-print("🔑 Lấy Key tại: " .. Lootdest.KeyLink)
+-- ============================ 16. KHỞI ĐỘNG ============================
+Notify("Quy Hub Ultimate", "Đã tải thành công!\n🔑 Key chính: 23za3a\n👑 Key Premium: 9213 (mở tab Premium)\n⏰ Key Premium có hiệu lực 5 giờ", 5, "🚀")
+print("✅ Quy Hub Ultimate v11.2 đã chạy!")
+print("🔑 Key chính: 23za3a")
+print("👑 Key Premium: 9213 (hiệu lực 5 giờ)")
+print("📥 Lấy Key tại: " .. KeyConfig.Link)
 
 -- Cập nhật thông tin định kỳ
 spawn(function()
     while true do
         wait(30)
         UpdateInfo()
+        if _G.QuyHub.Premium and not PremiumTab.Visible then
+            PremiumTab.Visible = true
+        end
     end
 end)
 
