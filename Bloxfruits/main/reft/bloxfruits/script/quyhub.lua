@@ -1,52 +1,115 @@
 -- ==========================================================================================
---                              QUY HUB V2 – BLOX FRUITS
---                     Key System chuẩn: 2 nút Get Key + ô nhập
---                     🔑 Key: 23za3a (chính) | 9213 (Premium)
---                     🎯 Code: quy (mở tab Fruits, Raid, Misc)
+--                              QUY HUB V3 – BLOX FRUITS
+--                     Key System 3 cấp độ: Pr | quyhub | mm
+--                     🔑 Pr  = Unlock ALL tab (bao gồm Premium)
+--                     🔑 quyhub = Unlock ALL tab (KHÓA Premium)
+--                     🔑 mm  = Chỉ unlock tab FARM
+--                     🚀 Auto Execute khi vào Blox Fruits
 --                     Tác giả: Quy
 -- ==========================================================================================
 
--- ============================ 1. TẢI RAYFIELD ============================
+-- ============================ 1. KIỂM TRA GAME ============================
+local function IsBloxFruits()
+    local placeId = game.PlaceId
+    -- Danh sách PlaceId của Blox Fruits
+    local bloxFruitsIds = {
+        2753915549,  -- Blox Fruits (chính)
+        4442272183,  -- Blox Fruits (cũ)
+        7449423635,  -- Blox Fruits (mới)
+        5842599403,  -- Blox Fruits (update)
+    }
+    for _, id in ipairs(bloxFruitsIds) do
+        if placeId == id then return true end
+    end
+    -- Kiểm tra tên game
+    if game.Name and game.Name:find("Blox Fruits") then return true end
+    return false
+end
+
+-- ============================ 2. TẢI RAYFIELD ============================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- ============================ 2. CẤU HÌNH ============================
+-- ============================ 3. CẤU HÌNH KEY SYSTEM ============================
 local KeyConfig = {
     MainLink = "https://link4sub.com/XFwyhwt2zw",
     PremiumLink = "https://link4sub.com/8paBqdaAu2",
-    ValidKeys = {"23za3a", "9213"},
-    PremiumKey = "9213",
+    Keys = {
+        ["Pr"] = { level = "premium", desc = "Unlock ALL tab (bao gồm Premium)" },
+        ["quyhub"] = { level = "full", desc = "Unlock ALL tab (KHÓA Premium)" },
+        ["mm"] = { level = "farmonly", desc = "Chỉ unlock tab FARM, khóa tất cả còn lại" },
+    },
     SaveKey = true,
-    FileName = "QuyHubKey.txt",
+    FileName = "QuyHubKeyV3.txt",
+    -- Auto Execute settings
+    AutoExecute = true,  -- Tự động chạy khi vào Blox Fruits
+    AutoFarmOnStart = false,  -- Tự động bật farm khi vào game (cần key hợp lệ)
 }
 
-local UnlockCode = "quy"
-local UnlockedTabs = {Fruits = false, Raid = false, Misc = false}
-local MainWindow = nil
-
--- ============================ 3. BIẾN TOÀN CỤ ============================
+-- ============================ 4. BIẾN TOÀN CỤ ============================
 _G.QuyHub = {
     Unlocked = false,
-    Premium = false,
-    Key = "",
-    -- Các biến tính năng...
-    Farm = false, FarmMode = "Melee", FarmTarget = "All", FarmRange = 20, FarmSpeed = 0.2,
-    AutoCollectFruits = false, AutoCollectItems = false, CollectRange = 30,
-    AutoRaid = false, AutoSeaBeast = false,
-    HopServer = false, HopServerFruit = false, AutoLootFruit = false,
-    Fly = false, FlySpeed = 50, NoClip = false, Speed = 16, JumpPower = 50,
-    ESP = false, AntiAFK = false, AutoHeal = false, HealThreshold = 0.3,
+    KeyLevel = "none", -- none | farmonly | full | premium
+    KeyUsed = "",
+    -- Farm
+    Farm = false,
+    FarmMode = "Melee",
+    FarmTarget = "All",
+    FarmRange = 20,
+    FarmSpeed = 0.2,
+    FarmBoss = false,
+    FarmBossRange = 30,
+    -- Collect
+    AutoCollectFruits = false,
+    AutoCollectItems = false,
+    CollectRange = 30,
+    -- Raid & Sea
+    AutoRaid = false,
+    AutoSeaBeast = false,
+    -- Premium
+    HopServer = false,
+    HopServerFruit = false,
+    AutoLootFruit = false,
+    -- Misc
+    Fly = false,
+    FlySpeed = 50,
+    NoClip = false,
+    Speed = 16,
+    JumpPower = 50,
+    ESP = false,
+    AntiAFK = false,
+    AutoHeal = false,
+    HealThreshold = 0.3,
     AutoRejoin = false,
+    -- Auto Execute
+    AutoStarted = false,
 }
 
--- ============================ 4. HÀM TIỆN ÍCH ============================
+-- ============================ 5. HÀM TIỆN ÍCH ============================
 local function Notify(title, content, duration, icon)
     Rayfield:Notify({Title = title, Content = content, Duration = duration or 3, Icon = icon})
 end
 
 local function GetPlayer() return game.Players.LocalPlayer end
-local function GetCharacter() return GetPlayer().Character end
-local function GetHumanoid() local c = GetCharacter() return c and c:FindFirstChildOfClass("Humanoid") end
-local function GetHumanoidRootPart() local c = GetCharacter() return c and c:FindFirstChild("HumanoidRootPart") end
+local function GetCharacter()
+    local p = GetPlayer()
+    return p and p.Character or nil
+end
+local function GetHumanoid()
+    local c = GetCharacter()
+    return c and c:FindFirstChildOfClass("Humanoid") or nil
+end
+local function GetHumanoidRootPart()
+    local c = GetCharacter()
+    return c and c:FindFirstChild("HumanoidRootPart") or nil
+end
+
+local function UpdateCharacter()
+    _G.QuyHub.Character = GetCharacter()
+    _G.QuyHub.Humanoid = GetHumanoid()
+    _G.QuyHub.HumanoidRootPart = GetHumanoidRootPart()
+end
+UpdateCharacter()
+game.Players.LocalPlayer.CharacterAdded:Connect(UpdateCharacter)
 
 local function TeleportTo(pos)
     local root = GetHumanoidRootPart()
@@ -65,152 +128,141 @@ local function LoadKey()
     return nil
 end
 
--- ============================ 5. XÁC THỰC KEY ============================
+-- ============================ 6. XÁC THỰC KEY (3 CẤP ĐỘ) ============================
 local function ValidateKey(key)
-    for _, v in ipairs(KeyConfig.ValidKeys) do
-        if v == key then return true end
-    end
-    return false
+    return KeyConfig.Keys[key] ~= nil
 end
 
-local function IsPremiumKey(key) return key == KeyConfig.PremiumKey end
+local function GetKeyLevel(key)
+    if KeyConfig.Keys[key] then
+        return KeyConfig.Keys[key].level
+    end
+    return "none"
+end
 
 local function UnlockFeatures(key)
+    local level = GetKeyLevel(key)
+    _G.QuyHub.KeyLevel = level
+    _G.QuyHub.KeyUsed = key
     _G.QuyHub.Unlocked = true
-    if IsPremiumKey(key) then
-        _G.QuyHub.Premium = true
-        Notify("Quy Hub Premium", "👑 Premium Key 9213! Tab Premium đã mở!", 5, "👑")
-    else
-        Notify("Quy Hub", "✅ Key hợp lệ! Chào mừng bạn!", 5, "🎉")
+
+    local msg = ""
+    if level == "premium" then
+        msg = "👑 Key PREMIUM! Mở khóa TẤT CẢ tab (bao gồm Premium)"
+    elseif level == "full" then
+        msg = "🔓 Key FULL! Mở khóa TẤT CẢ tab (KHÓA Premium)"
+    elseif level == "farmonly" then
+        msg = "🌾 Key FARM ONLY! Chỉ mở tab FARM, khóa các tab khác"
     end
+    Notify("Quy Hub V3", msg, 5, "🎯")
+
     if KeyWindow then KeyWindow:Destroy() end
     CreateMainWindow()
 end
 
--- ============================ 6. CỬA SỔ KEY SYSTEM ============================
-local KeyWindow = Rayfield:CreateWindow({
-    Name = "Quy Hub V2",
-    LoadingTitle = "⚡ Quy Hub V2 ⚡",
-    LoadingSubtitle = "Key System | by Quy",
-    ConfigurationSaving = {Enabled = false},
-    Discord = {Enabled = true, Invite = "quyhub", RememberJoins = true},
-    KeySystem = false,
-})
-
-local KeyTab = KeyWindow:CreateTab("Key System", nil)
-KeyTab:CreateParagraph({Title = "⚡ Quy Hub V2", Content = "Blox Fruits | Premium Script"})
-
--- ===== HÀNG NÚT GET KEY (2 nút) =====
-KeyTab:CreateSection("📋 Get Your Key")
-
--- Nút 1: Lấy key chính (23za3a)
-KeyTab:CreateButton({
-    Name = "🔑 Get License Key (23za3a)",
-    Callback = function()
-        setclipboard(KeyConfig.MainLink)
-        Notify("Quy Hub", "✅ Đã copy link lấy key chính!\nMở trình duyệt, hoàn thành task để nhận key.", 4, "📋")
-    end,
-})
-
--- Nút 2: Lấy key Premium (9213)
-KeyTab:CreateButton({
-    Name = "👑 Get Premium Key (9213)",
-    Callback = function()
-        setclipboard(KeyConfig.PremiumLink)
-        Notify("Quy Hub Premium", "✅ Đã copy link lấy key Premium!\nMở trình duyệt, hoàn thành task để nhận key.", 4, "📋")
-    end,
-})
-
--- ===== Ô NHẬP KEY + REDEEM =====
-KeyTab:CreateSection("🔑 Enter Key")
-
-local KeyInput = KeyTab:CreateTextBox({
-    Name = "Enter your key...",
-    PlaceholderText = "Paste key here (23za3a / 9213)",
-    CurrentValue = "",
-    Flag = "MainKey",
-    Callback = function(Text)
-        _G.QuyHub.TempKey = Text
-    end,
-})
-
-KeyTab:CreateButton({
-    Name = "🎯 Redeem Key",
-    Callback = function()
-        local key = KeyTab.Flags.MainKey or ""
-        if ValidateKey(key) then
-            _G.QuyHub.Key = key
-            if KeyConfig.SaveKey then SaveKey(key) end
-            UnlockFeatures(key)
-            KeyTab.Flags.MainKey = ""  -- Xóa ô nhập
-            _G.QuyHub.TempKey = ""
-        else
-            Notify("Quy Hub", "❌ Key không hợp lệ! Vui lòng kiểm tra lại.", 3, "❌")
-        end
-    end,
-})
-
--- ===== UNLOCK CODE (quy) =====
-KeyTab:CreateSection("🎯 Unlock Code (Fruits, Raid, Misc)")
-
-local CodeInput = KeyTab:CreateTextBox({
-    Name = "Enter unlock code...",
-    PlaceholderText = "Enter code (quy)...",
-    CurrentValue = "",
-    Flag = "UnlockCode",
-    Callback = function(Text) _G.QuyHub.TempCode = Text end,
-})
-
-KeyTab:CreateButton({
-    Name = "🔓 Redeem Code",
-    Callback = function()
-        local code = KeyTab.Flags.UnlockCode or ""
-        if code == UnlockCode then
-            UnlockedTabs.Fruits = true
-            UnlockedTabs.Raid = true
-            UnlockedTabs.Misc = true
-            Notify("Quy Hub", "✅ Code hợp lệ! Các tab Fruits, Raid, Misc đã mở!", 4, "🔓")
-            KeyTab.Flags.UnlockCode = ""
-            _G.QuyHub.TempCode = ""
-            if MainWindow then
-                if MainWindow.Tabs and MainWindow.Tabs["🍎 Fruits"] then MainWindow.Tabs["🍎 Fruits"].Visible = true end
-                if MainWindow.Tabs and MainWindow.Tabs["🌊 Raid & Sea"] then MainWindow.Tabs["🌊 Raid & Sea"].Visible = true end
-                if MainWindow.Tabs and MainWindow.Tabs["🛠️ Misc"] then MainWindow.Tabs["🛠️ Misc"].Visible = true end
-            end
-        else
-            Notify("Quy Hub", "❌ Code không hợp lệ! Vui lòng thử lại.", 3, "❌")
-        end
-    end,
-})
-
--- ===== BADGES & DISCORD =====
-KeyTab:CreateSection("📌 Get Key From")
-KeyTab:CreateParagraph({Title = "🔗 Linkvertise", Content = "👉 " .. KeyConfig.MainLink})
-KeyTab:CreateParagraph({Title = "🔗 LootLabs", Content = "👉 " .. KeyConfig.PremiumLink})
-KeyTab:CreateParagraph({Title = "🔗 Workink", Content = "👉 " .. KeyConfig.MainLink})
-
-KeyTab:CreateSection("💬 Need Support?")
-KeyTab:CreateButton({
-    Name = "💬 Join Discord",
-    Callback = function()
-        setclipboard("https://discord.gg/quyhub")
-        Notify("Quy Hub", "✅ Đã copy link Discord!", 3, "📋")
-    end,
-})
-
--- ============================ 7. MAIN WINDOW ============================
-function CreateMainWindow()
-    if MainWindow then return end
-    MainWindow = Rayfield:CreateWindow({
-        Name = "Quy Hub V2 - Main",
-        LoadingTitle = "⚡ Quy Hub V2 ⚡",
-        LoadingSubtitle = "by Quy | Blox Fruits",
-        ConfigurationSaving = {Enabled = true, FileName = "QuyHubConfig"},
+-- ============================ 7. CỬA SỔ KEY SYSTEM ============================
+local KeyWindow = nil
+local function CreateKeyWindow()
+    if KeyWindow then return end
+    KeyWindow = Rayfield:CreateWindow({
+        Name = "Quy Hub V3",
+        LoadingTitle = "⚡ Quy Hub V3 ⚡",
+        LoadingSubtitle = "Key System 3 cấp độ | by Quy",
+        ConfigurationSaving = {Enabled = false},
         Discord = {Enabled = true, Invite = "quyhub", RememberJoins = true},
         KeySystem = false,
     })
 
-    -- TAB HOME
+    local KeyTab = KeyWindow:CreateTab("Key System", nil)
+    KeyTab:CreateParagraph({Title = "⚡ Quy Hub V3", Content = "Blox Fruits | 3 Key Levels"})
+
+    KeyTab:CreateSection("📋 Get Your Key")
+    KeyTab:CreateButton({
+        Name = "🔑 Get Key (Pr / quyhub / mm)",
+        Callback = function()
+            setclipboard(KeyConfig.MainLink)
+            Notify("Quy Hub", "✅ Đã copy link lấy key!\nMở trình duyệt, hoàn thành task để nhận key.", 4, "📋")
+        end,
+    })
+
+    KeyTab:CreateSection("🔑 Enter Key")
+    KeyTab:CreateParagraph({
+        Title = "📌 Các key hợp lệ:",
+        Content = "🔑 Pr  = Unlock ALL tab (bao gồm Premium)\n🔑 quyhub = Unlock ALL tab (KHÓA Premium)\n🔑 mm  = Chỉ unlock tab FARM",
+    })
+
+    local KeyInput = KeyTab:CreateTextBox({
+        Name = "Enter your key...",
+        PlaceholderText = "Paste key here (Pr / quyhub / mm)",
+        CurrentValue = "",
+        Flag = "MainKey",
+        Callback = function(Text)
+            _G.QuyHub.TempKey = Text
+        end,
+    })
+
+    KeyTab:CreateButton({
+        Name = "🎯 Redeem Key",
+        Callback = function()
+            local key = KeyTab.Flags.MainKey or ""
+            if ValidateKey(key) then
+                _G.QuyHub.Key = key
+                if KeyConfig.SaveKey then SaveKey(key) end
+                UnlockFeatures(key)
+                KeyTab.Flags.MainKey = ""
+                _G.QuyHub.TempKey = ""
+            else
+                Notify("Quy Hub", "❌ Key không hợp lệ! Các key hợp lệ: Pr, quyhub, mm", 4, "❌")
+            end
+        end,
+    })
+
+    KeyTab:CreateSection("📌 Get Key From")
+    KeyTab:CreateParagraph({Title = "🔗 Linkvertise", Content = "👉 " .. KeyConfig.MainLink})
+    KeyTab:CreateParagraph({Title = "🔗 LootLabs", Content = "👉 " .. KeyConfig.PremiumLink})
+
+    KeyTab:CreateSection("💬 Need Support?")
+    KeyTab:CreateButton({
+        Name = "💬 Join Discord",
+        Callback = function()
+            setclipboard("https://discord.gg/quyhub")
+            Notify("Quy Hub", "✅ Đã copy link Discord!", 3, "📋")
+        end,
+    })
+end
+
+-- ============================ 8. MAIN WINDOW ============================
+local MainWindow = nil
+local function CreateMainWindow()
+    if MainWindow then return end
+
+    local level = _G.QuyHub.KeyLevel
+    local isPremium = (level == "premium")
+    local isFull = (level == "full" or level == "premium")
+    local isFarmOnly = (level == "farmonly")
+    local isTabLocked = function(tabName)
+        if isPremium then return false end
+        if isFull then
+            if tabName == "Premium" then return true end
+            return false
+        end
+        if isFarmOnly then
+            if tabName == "Farm" or tabName == "Home" or tabName == "Settings" then return false end
+            return true
+        end
+        return true
+    end
+
+    MainWindow = Rayfield:CreateWindow({
+        Name = "Quy Hub V3 - Main",
+        LoadingTitle = "⚡ Quy Hub V3 ⚡",
+        LoadingSubtitle = "Level: " .. level .. " | by Quy",
+        ConfigurationSaving = {Enabled = true, FileName = "QuyHubConfigV3"},
+        Discord = {Enabled = true, Invite = "quyhub", RememberJoins = true},
+        KeySystem = false,
+    })
+
+    -- ============================ TAB HOME ============================
     local HomeTab = MainWindow:CreateTab("🏠 Home", nil)
     HomeTab:CreateSection("👤 Player Info")
     local PlayerInfo = HomeTab:CreateParagraph({Title = "📊 Thông tin", Content = "Loading..."})
@@ -228,21 +280,22 @@ function CreateMainWindow()
     HomeTab:CreateButton({Name = "💀 Respawn", Callback = function() GetPlayer():LoadCharacter() end})
     HomeTab:CreateButton({Name = "📍 Về đảo khởi đầu", Callback = function() TeleportTo(Vector3.new(0, 100, 0)) end})
 
-    -- TAB FARM
+    -- ============================ TAB FARM ============================
     local FarmTab = MainWindow:CreateTab("⚔️ Farm", nil)
     FarmTab:CreateSection("🔥 Auto Farm")
-    FarmTab:CreateToggle({
+    local FarmToggle = FarmTab:CreateToggle({
         Name = "🔥 Auto Farm",
         CurrentValue = false,
         Flag = "Farm",
         Callback = function(v)
             _G.QuyHub.Farm = v
-            if v then Notify("Quy Hub", "Bắt đầu Farm!", 3, "⚔️")
+            if v then
+                Notify("Quy Hub", "Bắt đầu Farm!", 3, "⚔️")
                 spawn(function()
                     while _G.QuyHub.Farm do
                         local root = GetHumanoidRootPart()
                         if not root then wait(1) continue end
-                        local nearest, minDist = nil, 20
+                        local nearest, minDist = nil, _G.QuyHub.FarmRange or 20
                         local enemies = game:GetService("Workspace"):FindFirstChild("Enemies")
                         if enemies then
                             for _, e in pairs(enemies:GetChildren()) do
@@ -269,9 +322,42 @@ function CreateMainWindow()
     FarmTab:CreateDropdown({Name = "🎯 Loại quái", Options={"All","Bandit","Pirate","Marine","Gorilla","Yeti","Dragon"}, CurrentOption={"All"}, Flag="FarmTarget", Callback=function(o) _G.QuyHub.FarmTarget=o end})
     FarmTab:CreateSlider({Name = "📏 Khoảng cách", Range={5,60}, Increment=1, Suffix="m", CurrentValue=20, Flag="FarmRange", Callback=function(v) _G.QuyHub.FarmRange=v end})
     FarmTab:CreateSlider({Name = "⏱️ Tốc độ", Range={0.05,1}, Increment=0.05, Suffix="s", CurrentValue=0.2, Flag="FarmSpeed", Callback=function(v) _G.QuyHub.FarmSpeed=v end})
+    FarmTab:CreateSection("👹 Auto Boss")
+    FarmTab:CreateToggle({Name = "👹 Auto Boss", CurrentValue=false, Flag="FarmBoss", Callback=function(v)
+        _G.QuyHub.FarmBoss = v
+        if v then Notify("Quy Hub", "Bắt đầu Farm Boss!", 3, "👹")
+            spawn(function() while _G.QuyHub.FarmBoss do
+                local root = GetHumanoidRootPart()
+                if not root then wait(1) continue end
+                local nearest, minDist = nil, _G.QuyHub.FarmBossRange or 30
+                local enemies = game:GetService("Workspace"):FindFirstChild("Enemies")
+                if enemies then
+                    for _, e in pairs(enemies:GetChildren()) do
+                        if e:FindFirstChild("Humanoid") and e.Humanoid.Health > 0 then
+                            local name = e.Name
+                            if name:find("Boss") or name:find("King") or name:find("Yeti") or name:find("Dragon") then
+                                local d = (root.Position - e.HumanoidRootPart.Position).Magnitude
+                                if d < minDist then nearest = e; minDist = d end
+                            end
+                        end
+                    end
+                end
+                if nearest then
+                    root.CFrame = nearest.HumanoidRootPart.CFrame * CFrame.new(0,0,-6)
+                    wait(0.2)
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game:GetService("UserInputService").MouseIcon,0)
+                    wait(0.05)
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game:GetService("UserInputService").MouseIcon,0)
+                end
+                wait(0.3)
+            end end)
+        else Notify("Quy Hub", "Tắt Farm Boss!", 3, "⏹️") end
+    end})
+    FarmTab:CreateSlider({Name = "📏 Khoảng cách boss", Range={10,60}, Increment=1, Suffix="m", CurrentValue=30, Flag="FarmBossRange", Callback=function(v) _G.QuyHub.FarmBossRange=v end})
 
-    -- TAB COLLECT
+    -- ============================ TAB COLLECT ============================
     local CollectTab = MainWindow:CreateTab("📦 Collect", nil)
+    CollectTab.Visible = not isTabLocked("Collect")
     CollectTab:CreateSection("📦 Auto Collect")
     CollectTab:CreateToggle({Name = "🍎 Auto Collect Fruits", CurrentValue=false, Flag="CollectFruits", Callback=function(v)
         _G.QuyHub.AutoCollectFruits = v
@@ -297,8 +383,9 @@ function CreateMainWindow()
     end})
     CollectTab:CreateSlider({Name = "📏 Khoảng cách", Range={5,50}, Increment=1, Suffix="m", CurrentValue=30, Flag="CollectRange", Callback=function(v) _G.QuyHub.CollectRange=v end})
 
-    -- TAB TELEPORT
+    -- ============================ TAB TELEPORT ============================
     local TeleportTab = MainWindow:CreateTab("📍 Teleport", nil)
+    TeleportTab.Visible = not isTabLocked("Teleport")
     TeleportTab:CreateSection("🏝️ Islands")
     local islands = {
         {"Đảo Khởi Đầu", Vector3.new(0,100,0)},
@@ -328,13 +415,13 @@ function CreateMainWindow()
         Notify("Quy Hub", "Teleport đến ("..x..", "..y..", "..z..")", 3, "🚀")
     end})
 
-    -- TAB PREMIUM (chỉ hiện khi Premium)
+    -- ============================ TAB PREMIUM ============================
     local PremiumTab = MainWindow:CreateTab("👑 Premium", nil)
-    PremiumTab.Visible = _G.QuyHub.Premium
-    PremiumTab:CreateSection("🌟 Premium Features (9213)")
-    PremiumTab:CreateParagraph({Title = "👑 Welcome Premium User!", Content = "Key: 9213 – valid 5h"})
+    PremiumTab.Visible = (level == "premium")
+    PremiumTab:CreateSection("🌟 Premium Features (Key: Pr)")
+    PremiumTab:CreateParagraph({Title = "👑 Welcome Premium User!", Content = "Key: Pr – Unlock all features!"})
     PremiumTab:CreateToggle({Name = "🔄 Hop Server (find fruit)", CurrentValue=false, Flag="HopServer", Callback=function(v)
-        if not _G.QuyHub.Premium then Notify("Quy Hub", "⚠️ Need Premium Key!", 3, "⚠️") return end
+        if level ~= "premium" then Notify("Quy Hub", "⚠️ Cần key Pr!", 3, "⚠️") return end
         _G.QuyHub.HopServer = v
         if v then Notify("Quy Hub Premium", "Start Hop Server!", 3, "🔄")
             spawn(function() while _G.QuyHub.HopServer do
@@ -353,7 +440,7 @@ function CreateMainWindow()
         else Notify("Quy Hub Premium", "Stop Hop Server!", 3, "⏹️") end
     end})
     PremiumTab:CreateToggle({Name = "🍎 Loot Fruit (auto collect)", CurrentValue=false, Flag="AutoLootFruit", Callback=function(v)
-        if not _G.QuyHub.Premium then Notify("Quy Hub", "⚠️ Need Premium Key!", 3, "⚠️") return end
+        if level ~= "premium" then Notify("Quy Hub", "⚠️ Cần key Pr!", 3, "⚠️") return end
         _G.QuyHub.AutoLootFruit = v
         if v then Notify("Quy Hub Premium", "Start Looting!", 3, "🍎")
             spawn(function() while _G.QuyHub.AutoLootFruit do
@@ -378,18 +465,18 @@ function CreateMainWindow()
         else Notify("Quy Hub Premium", "Stop Looting!", 3, "⏹️") end
     end})
 
-    -- TAB FRUITS (khóa, mở bằng code "quy")
+    -- ============================ TAB FRUITS ============================
     local FruitsTab = MainWindow:CreateTab("🍎 Fruits", nil)
-    FruitsTab.Visible = UnlockedTabs.Fruits
-    FruitsTab:CreateSection("🍎 Fruit Features (Code: quy)")
+    FruitsTab.Visible = not isTabLocked("Fruits")
+    FruitsTab:CreateSection("🍎 Fruit Features")
     FruitsTab:CreateToggle({Name = "🍎 Auto Farm Fruit", CurrentValue=false, Flag="FarmFruit", Callback=function(v)
         Notify("Quy Hub", v and "Bắt đầu Farm Fruit!" or "Tắt Farm Fruit!", 3, "🍎")
     end})
 
-    -- TAB RAID & SEA (khóa, mở bằng code "quy")
+    -- ============================ TAB RAID & SEA ============================
     local RaidTab = MainWindow:CreateTab("🌊 Raid & Sea", nil)
-    RaidTab.Visible = UnlockedTabs.Raid
-    RaidTab:CreateSection("🌀 Raid & Sea (Code: quy)")
+    RaidTab.Visible = not isTabLocked("Raid")
+    RaidTab:CreateSection("🌀 Raid & Sea")
     RaidTab:CreateToggle({Name = "🌀 Auto Raid", CurrentValue=false, Flag="AutoRaid", Callback=function(v)
         _G.QuyHub.AutoRaid = v
         if v then Notify("Quy Hub", "Start Auto Raid!", 3, "🌀")
@@ -445,10 +532,10 @@ function CreateMainWindow()
         else Notify("Quy Hub", "Stop Sea Beast!", 3, "⏹️") end
     end})
 
-    -- TAB MISC (khóa, mở bằng code "quy")
+    -- ============================ TAB MISC ============================
     local MiscTab = MainWindow:CreateTab("🛠️ Misc", nil)
-    MiscTab.Visible = UnlockedTabs.Misc
-    MiscTab:CreateSection("🛠️ Misc Features (Code: quy)")
+    MiscTab.Visible = not isTabLocked("Misc")
+    MiscTab:CreateSection("🛠️ Misc Features")
     MiscTab:CreateToggle({Name = "✈️ Fly", CurrentValue=false, Flag="Fly", Callback=function(v)
         _G.QuyHub.Fly = v
         local root = GetHumanoidRootPart(); local h = GetHumanoid()
@@ -517,12 +604,12 @@ function CreateMainWindow()
         else Notify("Quy Hub", "Auto Rejoin Off!", 2, "⏹️") end
     end})
 
-    -- TAB SETTINGS
+    -- ============================ TAB SETTINGS ============================
     local SettingsTab = MainWindow:CreateTab("⚙️ Settings", nil)
     SettingsTab:CreateSection("🔧 Settings")
     SettingsTab:CreateButton({Name = "🔄 Reset All", Callback = function()
         for k,v in pairs(_G.QuyHub) do
-            if type(v) == "boolean" and k ~= "Unlocked" and k ~= "Premium" then
+            if type(v) == "boolean" and k ~= "Unlocked" and k ~= "KeyLevel" and k ~= "AutoStarted" then
                 _G.QuyHub[k] = false
             end
         end
@@ -534,19 +621,113 @@ function CreateMainWindow()
         end
         Notify("Quy Hub", "Reset All Done!", 3, "✅")
     end})
-    SettingsTab:CreateParagraph({Title = "📋 Info", Content = "Quy Hub V2\nby Quy\nKey: 23za3a | Premium: 9213\nCode: quy\nDiscord: quyhub"})
+    SettingsTab:CreateParagraph({Title = "📋 Info", Content = "Quy Hub V3\nby Quy\n🔑 Pr  = Premium (Unlock ALL)\n🔑 quyhub = Full (Lock Premium)\n🔑 mm  = Farm Only\n🚀 Auto Execute: Blox Fruits\nDiscord: quyhub"})
 
-    Notify("Quy Hub V2", "✅ Main window loaded! Enjoy!", 3, "🎉")
+    Notify("Quy Hub V3", "✅ Main window loaded! Level: " .. level, 3, "🎉")
 end
 
--- ============================ 8. KIỂM TRA KEY ĐÃ LƯU ============================
-local savedKey = LoadKey()
-if savedKey and ValidateKey(savedKey) then
-    _G.QuyHub.Key = savedKey
-    UnlockFeatures(savedKey)
+-- ============================ 9. AUTO EXECUTE ============================
+local function AutoExecute()
+    -- Kiểm tra nếu đã unlock
+    if _G.QuyHub.Unlocked then
+        -- Nếu đã có main window, không tạo lại
+        if not MainWindow then
+            CreateMainWindow()
+        end
+        -- Tự động bật Farm nếu cài đặt
+        if KeyConfig.AutoFarmOnStart and not _G.QuyHub.Farm then
+            _G.QuyHub.Farm = true
+            Notify("Quy Hub", "🚀 Auto Farm đã được bật!", 3, "⚔️")
+            -- Kích hoạt farm loop
+            spawn(function()
+                while _G.QuyHub.Farm do
+                    local root = GetHumanoidRootPart()
+                    if not root then wait(1) continue end
+                    local nearest, minDist = nil, _G.QuyHub.FarmRange or 20
+                    local enemies = game:GetService("Workspace"):FindFirstChild("Enemies")
+                    if enemies then
+                        for _, e in pairs(enemies:GetChildren()) do
+                            if e:FindFirstChild("Humanoid") and e.Humanoid.Health > 0 then
+                                local d = (root.Position - e.HumanoidRootPart.Position).Magnitude
+                                if d < minDist then nearest = e; minDist = d end
+                            end
+                        end
+                    end
+                    if nearest then
+                        root.CFrame = nearest.HumanoidRootPart.CFrame * CFrame.new(0,0,-4)
+                        wait(0.1)
+                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game:GetService("UserInputService").MouseIcon,0)
+                        wait(0.05)
+                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game:GetService("UserInputService").MouseIcon,0)
+                    end
+                    wait(0.2)
+                end
+            end)
+        end
+        _G.QuyHub.AutoStarted = true
+        return
+    end
+
+    -- Nếu chưa unlock, kiểm tra key đã lưu
+    local savedKey = LoadKey()
+    if savedKey and ValidateKey(savedKey) then
+        _G.QuyHub.Key = savedKey
+        UnlockFeatures(savedKey)
+        -- Sau khi unlock, auto execute sẽ được gọi lại
+        return
+    end
+
+    -- Nếu chưa có key, hiển thị key window
+    if not KeyWindow then
+        CreateKeyWindow()
+    end
 end
 
--- ============================ 9. AUTO HEAL NỀN ============================
+-- ============================ 10. KIỂM TRA VÀ AUTO EXECUTE ============================
+local function StartHub()
+    if _G.QuyHub.AutoStarted then return end
+    
+    -- Kiểm tra nếu đang ở Blox Fruits
+    if IsBloxFruits() then
+        print("[Quy Hub V3]: Phát hiện Blox Fruits! Đang tự động khởi chạy...")
+        Notify("Quy Hub V3", "🚀 Blox Fruits detected! Auto executing...", 3, "🎯")
+        AutoExecute()
+    else
+        print("[Quy Hub V3]: Không phải Blox Fruits. Đang chờ...")
+        -- Vẫn cho phép dùng script nhưng hiển thị thông báo
+        Notify("Quy Hub V3", "⚠️ Chỉ hỗ trợ Blox Fruits! Vẫn có thể nhập key để sử dụng.", 4, "⚠️")
+        -- Cho phép nhập key manual
+        if not KeyWindow then
+            CreateKeyWindow()
+        end
+    end
+end
+
+-- Chạy sau khi script load
+task.spawn(function()
+    wait(0.5)
+    StartHub()
+end)
+
+-- ============================ 11. THEO DÕI KHI VÀO GAME ============================
+-- Nếu người chơi vào game (teleport), tự động chạy lại
+game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(state)
+    if state == Enum.TeleportState.Teleporting then
+        wait(5)
+        _G.QuyHub.AutoStarted = false
+        StartHub()
+    end
+end)
+
+-- Khi nhân vật spawn, kiểm tra lại
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    wait(2)
+    if IsBloxFruits() and _G.QuyHub.Unlocked and not _G.QuyHub.AutoStarted then
+        AutoExecute()
+    end
+end)
+
+-- ============================ 12. AUTO HEAL NỀN ============================
 spawn(function()
     while true do
         wait(1)
@@ -561,6 +742,9 @@ spawn(function()
     end
 end)
 
-print("✅ Quy Hub V2 loaded!")
-print("🔑 Key: 23za3a | Premium: 9213")
-print("🎯 Code: quy")
+print("✅ Quy Hub V3 loaded! (Auto Execute)")
+print("🔑 Các key hợp lệ:")
+print("   Pr     = Unlock ALL (bao gồm Premium)")
+print("   quyhub = Unlock ALL (KHÓA Premium)")
+print("   mm     = Chỉ unlock tab FARM")
+print("🚀 Auto Execute: Blox Fruits only")
